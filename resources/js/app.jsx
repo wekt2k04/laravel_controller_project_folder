@@ -6,7 +6,7 @@ function App() {
     return (
         <div style={{ textAlign: 'center', marginTop: '50px' }}>
             <h1 style={{ color: '#4F46E5', fontSize: '2rem' }}>
-                🚀 BRAVO GROUPE CONTROLLER !
+                🚀 CONTROLLER !
             </h1>
             <p>React est bien chargé dans Laravel.</p>
             <p>Le Groupe 3 a réussi sa mission.</p>
