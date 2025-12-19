@@ -4,8 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SeanceController;
 use App\Http\Controllers\PresenceController;
 
-// We wrap these routes in 'auth' middleware so only logged-in users can see them
-// (For now, since we haven't set up login, we might comment out 'middleware' to test)
+
 Route::middleware(['auth'])->group(function () {
     
     Route::get('/dashboard', function () {
@@ -20,4 +19,4 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // For testing 
-Route::get('/test', function() {return view('test'); });
+Route::get('/', function() {return view('seances.index'); });
