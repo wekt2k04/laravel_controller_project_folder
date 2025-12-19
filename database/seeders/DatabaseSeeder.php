@@ -3,29 +3,56 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Module;
+use App\Models\Seance;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // 1. Créer le Professeur (Admin de test)
-        \App\Models\User::factory()->create([
+        // 1. Création du Professeur
+        User::factory()->create([
             'name' => 'Professeur Principal',
             'email' => 'prof@ensa.ma',
-            'password' => bcrypt('password'), // Mot de passe hashé
-            'role' => 'prof'
+            'password' => Hash::make('password'),
+            'role' => 'prof',
         ]);
 
-        // 2. Créer 50 étudiants aléatoires
-        \App\Models\User::factory(50)->create([
+        // 2. Création de 50 Étudiants
+        $students = User::factory(50)->create([
             'role' => 'etudiant'
+        ]);
+
+        // 3. Création MANUELLE des Modules (Plus besoin de Factory)
+        $module1 = Module::create([
+            'titre' => 'Développement Web Dynamique',
+            'description' => 'Apprentissage de Laravel et React'
+        ]);
+        
+        $module2 = Module::create([
+            'titre' => 'Base de Données Avancées',
+            'description' => 'Administration Oracle et MySQL'
+        ]);
+
+        // 4. Création MANUELLE des Séances liées aux modules
+        Seance::create([
+            'titre' => 'Introduction à Laravel',
+            'date_debut' => now()->addDays(1), // Demain
+            'module_id' => $module1->id
+        ]);
+
+        Seance::create([
+            'titre' => 'Architecture MVC',
+            'date_debut' => now()->addDays(3), // Dans 3 jours
+            'module_id' => $module1->id
+        ]);
+
+        Seance::create([
+            'titre' => 'Optimisation SQL',
+            'date_debut' => now()->addDays(2),
+            'module_id' => $module2->id
         ]);
     }
 }
