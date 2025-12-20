@@ -1,0 +1,82 @@
+@startuml Diagramme de Séquence - Faire l'appel
+
+' Configuration du style
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 200
+autonumber "<b>[00]"
+
+' --- ACTEURS ET PARTICIPANTS ---
+
+actor "Professeur" as Prof
+participant "Frontend (React)" as Vue #LightBlue
+participant "Route API" as Route
+participant "Controller (G3)" as Ctrl #LightYellow
+database "Base de Données (G1)" as BD
+
+' --- PHASE 1 : AFFICHAGE (GET) ---
+
+== Phase 1 : Chargement de la liste (GET) ==
+
+Prof -> Vue : Clique sur "Voir Séance"
+activate Vue
+
+Vue -> Route : GET /api/seances/{id}
+activate Route
+
+Route -> Ctrl : SeanceController@show(id)
+activate Ctrl
+
+    group Récupération des données (Eloquent)
+        Ctrl -> BD : Seance::with('module')->find(id)
+        activate BD
+        BD --> Ctrl : Objet Séance (+ Module)
+        deactivate BD
+
+        Ctrl -> BD : User::where('role', 'etudiant')->get()
+        activate BD
+        BD --> Ctrl : Liste des 50 étudiants
+        deactivate BD
+    end
+
+Ctrl --> Vue : Réponse JSON { seance, students }
+deactivate Ctrl
+deactivate Route
+
+Vue --> Prof : Affiche le tableau (Cases à cocher)
+deactivate Vue
+
+' --- PHASE 2 : ENREGISTREMENT (POST) ---
+
+== Phase 2 : Validation de l'appel (POST) ==
+
+Prof -> Vue : Coche les présents et clique "Enregistrer"
+activate Vue
+
+Vue -> Route : POST /api/appel/save \n{ seance_id: 1, presences: [5, 12, 44...] }
+activate Route
+
+Route -> Ctrl : PresenceController@store(request)
+activate Ctrl
+
+    group Logique Métier (Boucle de traitement)
+        Ctrl -> BD : Récupère tous les étudiants
+        
+        loop Pour chaque étudiant
+            Ctrl -> Ctrl : Vérifie si ID est dans la liste reçue
+            
+            alt Si ID présent
+                Ctrl -> BD : Presence::updateOrCreate(..., est_present=true)
+            else Si ID absent
+                Ctrl -> BD : Presence::updateOrCreate(..., est_present=false)
+            end
+        end
+    end
+
+Ctrl --> Vue : Réponse JSON { message: "Appel enregistré !" }
+deactivate Ctrl
+deactivate Route
+
+Vue --> Prof : Affiche notification de succès
+deactivate Vue
+
+@enduml

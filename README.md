@@ -1,96 +1,130 @@
-# 🎓 ENSA Smart Attendance - Socle Technique Unifié
+# 🎓 ENSA Smart Attendance - Rapport Technique & Architecture Unifiée
 
-> **Version :** Sprint 3 (Finalisation Backend & Architecture)
-> **Stack :** Laravel 11 (API) + React (Frontend) + MySQL
+**Projet:** Système de Gestion de Présence  
+**Version:** Sprint 3 (Validation Socle Backend & Intégration Frontend)  
+**Stack Technique:** Laravel 11 (API) + React 18 (SPA) + MySQL  
+**Responsabilité:** Groupe 3 (Contrôleurs & Orchestration)
 
----
+## 📑 Sommaire
 
-## 1. La Problématique
-Le projet vise à digitaliser la gestion de présence à l'ENSA.
-**Le défi technique :** Nous avions trois groupes travaillant séparément sur des briques différentes (Base de données, Interface React, Logique Métier).
-**La solution :** Ce dépôt est le **Monolithe** qui réunit tout le monde. Il sert d'API REST pour le Backend et d'hôte pour l'application React (via Vite).
+1. [Contexte & Défi Architectural](#1-contexte--défi-architectural)
+2. [Stratégie d'Intégration : Le Monolithe Hybride](#2-stratégie-dintégration--le-monolithe-hybride)
+3. [Focus Technique : Mécanique d'Intégration Laravel/React](#3-focus-technique--mécanique-dintégration-laravelreact-vite)
+4. [Logique Métier & Performance](#4-logique-métier--performance-groupe-3)
+5. [Structure des Données](#structure-des-données-groupe-1)
+6. [Bilan d'Avancement & Roadmap Sprint 4](#bilan-davancement--roadmap-sprint-4)
 
----
 
-## 2. L'Architecture : Qui a fait quoi ?
+## 1. Contexte & Défi Architectural
 
-### 🧱 Groupe 1 : La Fondation (Modèle & Data)
-Ils ont structuré la mémoire de l'application.
-* **Tables :** `Users` (avec distinction Prof/Étudiant), `Modules`, `Seances`, `Presences`.
-* **Données :** Création de Seeders pour générer 50 étudiants fictifs et des cours de test afin de ne pas développer "à l'aveugle".
+Dans le cadre du module "Développement Web Dynamique", le projet a été segmenté en trois pôles de compétences :
 
-### 🎨 Groupe 2 : Le Visage (Vue)
-Ils ont conçu l'expérience utilisateur.
-* **Tech :** React.js avec Tailwind CSS.
-* **Structure :** Une "Single Page Application" (SPA) fluide.
-* **Intégration :** Au lieu d'être un projet à part, leur code vit désormais dans `resources/js` pour être compilé par Laravel Vite.
+- **Groupe 1 (Modèle)** : Persistance des données et schéma relationnel (Migrations/Seeders)
+- **Groupe 2 (Vue)** : UX et interface graphique via React
+- **Groupe 3 (Contrôleur)** : Logique métier, routage et sécurisation
 
-### 🧠 Groupe 3 : Le Chef d'Orchestre (Contrôleur)
-C'est le cœur de ce dépôt. Nous avons construit le "Pont" entre la base de données et React.
-* **Transformation :** Abandon des vues `Blade` classiques au profit d'une **API REST**.
-* **Logique :** Réception des requêtes React -> Interrogation de la BDD -> Réponse en JSON.
+### Le Défi Critique : La Rupture Technologique
 
----
+Comment fusionner une application Frontend moderne (React/SPA) avec un Backend robuste (Laravel) sans déployer deux serveurs distincts et gérer les problèmes de CORS ?
 
-## 3. Focus Technique : La Logique du Groupe 3 (Ce qui a été fait)
+## 2. Stratégie d'Intégration : Le Monolithe Hybride
 
-Pour que le système fonctionne, nous avons implémenté une logique stricte dans le dossier `app/Http/Controllers/Api`.
+Laravel agit comme chef d'orchestre global, hébergeant le code Frontend tout en servant d'API. (To preview the following diagram, please use any mermaid-compatible viewer in VSCode extension.)
 
-### 🔗 Le Routage (`routes/api.php`)
-Nous avons ouvert des portes d'entrée spécifiques pour le Frontend :
-* `GET /api/seances` : Pour le tableau de bord.
-* `GET /api/seances/{id}` : Pour la page d'appel.
-* `POST /api/appel/save` : Pour enregistrer les présences.
+```mermaid
+graph TB
+    subgraph Client["🖥️ Client Layer"]
+        User["👤 Utilisateur / Navigateur"]
+    end
+    
+    subgraph Laravel["🔧 Laravel Backend"]
+        Router["📍 Routing<br/>welcome.blade.php"]
+        API["📡 API Routes<br/>routes/api.php"]
+        Controllers["⚙️ Contrôleurs G3<br/>Logique Métier"]
+    end
+    
+    subgraph React["⚛️ React Frontend SPA"]
+        Bundle["📦 React Bundle<br/>+ Tailwind + Router"]
+    end
+    
+    subgraph Database["💾 Données G1"]
+        DB["🗄️ MySQL<br/>Migrations/Seeders"]
+    end
+    
+    User -->|Page Request| Router
+    Router -->|Serve| Bundle
+    User -->|Fetch API JSON| API
+    API --> Controllers
+    Controllers -->|Eloquent ORM| DB
+    Bundle -->|Interactive UI| User
+    
+    style Client fill:#e1f5ff
+    style Laravel fill:#fff3e0
+    style React fill:#f3e5f5
+    style Database fill:#e8f5e9
+```
 
-### 📡 SeanceController (Lecture)
-C'est le distributeur d'informations.
-* **Problème résolu :** Le Frontend a besoin d'afficher le module associé à une séance, et la liste des élèves pour les cases à cocher.
-* **Solution :** Utilisation de l'Eager Loading Eloquent (`with('module')`) pour éviter de faire 50 requêtes SQL.
-* **Rendu :** Envoie un objet JSON complet contenant les détails du cours ET la liste des étudiants triés.
+### 🧱 Backend - Laravel 11
+**Rôle:** Socle de sécurité et API REST exposant des données au format JSON.
 
-### 💾 PresenceController (Écriture)
-C'est le garant des données.
-* **Problème résolu :** Gérer l'enregistrement de masse (une classe entière) et la modification (si le prof se trompe).
-* **Logique :**
-    1.  Reçoit un tableau d'IDs (`presences: [1, 5, 12]`).
-    2.  Parcourt tous les étudiants de la base.
-    3.  Utilise `updateOrCreate` : Si l'étudiant est dans la liste reçue -> Présent. Sinon -> Absent.
-    4.  Renvoie des statistiques immédiates (ex: "45 présents, 5 absents").
+### 🎨 Frontend - React 18 + Tailwind
+**Intégration:** SPA encapsulée dans `resources/js` de Laravel, offrant une navigation fluide sans rechargement.
 
----
+### 🧠 Orchestration - Groupe 3
+**Mission:** Pont vital entre la base de données (G1) et l'interface (G2) via validation et formatage JSON.
 
-## 4. Rendu Final & État Actuel
+## 3. Focus Technique : Mécanique d'Intégration Laravel/React (Vite)
 
-À la fin de ce Sprint 3, le projet est **pleinement fonctionnel** techniquement :
-1.  ✅ **Base de données :** Connectée, migrée et peuplée.
-2.  ✅ **API Backend :** Testée et opérationnelle (envoie/reçoit du JSON).
-3.  ✅ **Environnement Frontend :** React est installé, configuré avec Vite, et s'affiche sur la page d'accueil.
+### A. Moteur de Compilation : Vite
 
----
+Configuration `vite.config.js` :
 
-## 5. Next Steps : Ce que chaque groupe doit faire
+```javascript
+plugins: [
+    laravel({
+        input: ['resources/js/app.jsx'],
+        refresh: true, // Hot Module Replacement (HMR)
+    }),
+    react(),
+],
+```
 
-Maintenant que le squelette est solide, chacun doit venir y greffer ses muscles.
+**Avantage HMR:** Les modifications React sont reflétées instantanément sans rechargement complet.
 
-### 👉 Pour le Groupe 1
-* **Action :** Vérifiez les fichiers dans `database/migrations`.
-* **Attention :** Si vous changez le nom d'une colonne maintenant, vous casserez l'API du Groupe 3. Concertation obligatoire !
+### B. Point d'Entrée Unique
 
-### 👉 Pour le Groupe 2
-* **Action :** Migrez vos composants React.
-    * Copiez vos fichiers de `src/components` vers `resources/js/components`.
-    * Copiez vos pages vers `resources/js/pages`.
-* **Connexion :** Remplacez vos données fictives (mock) par des appels `fetch('/api/seances')`.
+Le fichier `welcome.blade.php` est la seule page HTML servie :
 
-### 👉 Pour le Groupe 3 (Nous)
-* **Action :** Support technique.
-* **Mission :** Aider le Groupe 2 à debugger les appels API et surveiller les logs du serveur.
+```html
+<!DOCTYPE html>
+<head>
+    @viteReactRefresh
+    @vite(['resources/js/app.jsx'])
+</head>
+<body>
+    <div id="app"></div>
+</body>
+```
 
----
+React prend le contrôle du DOM et gère le routing côté client via React Router.
 
-## 🏆 Conclusion
+### C. Flux de Données (API REST)
 
-Le **Sprint 3 est validé**.
-Nous sommes passés de trois entités séparées à une architecture unifiée **Laravel API + React**. La logique de contrôle est en place, les données circulent. Il ne reste plus qu'à habiller le tout avec l'interface finale du Groupe 2.
+React effectue des appels asynchrones explicites vers les routes API. Format d'échange : **JSON uniquement**.
 
-*Prêt pour la démo finale.*
+## 4. Logique Métier & Performance (Groupe 3)
+
+### 🔗 Routage API (`routes/api.php`)
+
+- `GET /api/seances/{id}` : Récupération d'une séance
+- `POST /api/appel/save` : Validation des présences
+
+### 📡 Optimisation : Eager Loading
+
+**Problème:** N+1 Query Problem  
+**Solution:** Utiliser `with()` d'Eloquent pour charger les relations en amont
+
+```php
+$seance = Seance::with('module')->findOrFail($id);
+```
+

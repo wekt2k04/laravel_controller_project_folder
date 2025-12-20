@@ -1,0 +1,70 @@
+@startuml Diagramme de Classes - ENSA Smart Attendance
+
+' Configuration du style
+skinparam classAttributeIconSize 0
+skinparam monochrome true
+skinparam packageStyle rectangle
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+}
+
+' --- DÉFINITION DES CLASSES ---
+
+class User {
+    - id : int
+    - name : string
+    - email : string
+    - password : string
+    - role : string { 'prof', 'etudiant' }
+    --
+    + presences() : HasMany
+}
+
+class Module {
+    - id : int
+    - titre : string
+    - description : text
+    --
+    + seances() : HasMany
+}
+
+class Seance {
+    - id : int
+    - titre : string
+    - date_debut : datetime
+    - module_id : int
+    --
+    + module() : BelongsTo
+    + presences() : HasMany
+}
+
+class Presence {
+    - id : int
+    - seance_id : int
+    - student_id : int
+    - est_present : boolean
+    --
+    + seance() : BelongsTo
+    + student() : BelongsTo
+}
+
+' --- RELATIONS (CARDINALITÉS) ---
+
+' Un Module contient plusieurs Séances (Relation forte)
+Module "1" *-- "0..*" Seance : Contient >
+
+' Une Séance contient plusieurs Présences (Relation forte)
+Seance "1" *-- "0..*" Presence : Possède >
+
+' Un User (Étudiant) est lié à plusieurs lignes de Présence
+User "1" -- "0..*" Presence : Est concerné <
+
+' Note explicative
+note right of User
+  La distinction Prof/Étudiant 
+  se fait via l'attribut "role".
+end note
+
+@enduml
