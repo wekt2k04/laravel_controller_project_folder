@@ -134,3 +134,5 @@ Ouvrez l'onglet **Réseau (Network)** de l'inspecteur (F12) et rafraîchissez.
 * Si elles sont en vert (200) et contiennent du JSON : ✅ BRAVO ! Vous êtes connectés à la base de données.
 
 ---
+## 6. 🏆 Conclusion
+Vous avez maintenant les clés en main pour finaliser la vue. Une fois votre travail terminé, informez le à Maelainine afin qu'ils puissent continuer le développement de l'API en toute sérénité.

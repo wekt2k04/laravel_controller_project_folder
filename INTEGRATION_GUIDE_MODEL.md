@@ -85,4 +85,4 @@ Une fois la commande précédente réussie :
 
 ---
 ## 6. 🏆 Conclusion
-Vous avez maintenant les clés en main pour finaliser la base de données. Une fois votre travail terminé, informez le Groupe 3 afin qu'ils puissent continuer le développement de l'API en toute sérénité.
+Vous avez maintenant les clés en main pour finaliser la base de données. Une fois votre travail terminé, informez le à Maelainine afin qu'ils puissent continuer le développement de l'API en toute sérénité.
