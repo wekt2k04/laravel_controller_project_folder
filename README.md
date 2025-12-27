@@ -1,130 +1,117 @@
-# 🎓 ENSA Smart Attendance - Rapport Technique & Architecture Unifiée
+# 🎓 Plateforme Académique (Laravel + React)
 
-**Projet:** Système de Gestion de Présence  
-**Version:** Sprint 3 (Validation Socle Backend & Intégration Frontend)  
-**Stack Technique:** Laravel 11 (API) + React 18 (SPA) + MySQL  
-**Responsabilité:** Groupe 3 (Contrôleurs & Orchestration)
+Ce projet est une application web complète de gestion académique (Emploi du temps, Présences, Annonces) résultant de la fusion de trois modules (Modèle, Vue, Contrôleur). Il utilise **Laravel 11** pour le Backend (API) et **React 18** pour le Frontend (SPA).
 
-## 📑 Sommaire
+## 🏗️ Architecture & Documentation
 
-1. [Contexte & Défi Architectural](#1-contexte--défi-architectural)
-2. [Stratégie d'Intégration : Le Monolithe Hybride](#2-stratégie-dintégration--le-monolithe-hybride)
-3. [Focus Technique : Mécanique d'Intégration Laravel/React](#3-focus-technique--mécanique-dintégration-laravelreact-vite)
-4. [Logique Métier & Performance](#4-logique-métier--performance-groupe-3)
-5. [Structure des Données](#structure-des-données-groupe-1)
-6. [Bilan d'Avancement & Roadmap Sprint 4](#bilan-davancement--roadmap-sprint-4)
+Le projet suit une architecture **MVC découplée** :
 
+- **Modèle (Laravel)** : Structure des données et règles métier. [Voir la documentation Modèle](docs/README_MODEL.md)
+- **Vue (React)** : Interface utilisateur dynamique. [Voir la documentation Vue](docs/README_VIEW.md)
+- **Contrôleur (Laravel API)** : Logique de traitement et sécurité. [Voir la documentation Contrôleur](docs/README_CONTROLLER.md)
 
-## 1. Contexte & Défi Architectural
-
-Dans le cadre du module "Développement Web Dynamique", le projet a été segmenté en trois pôles de compétences :
-
-- **Groupe 1 (Modèle)** : Persistance des données et schéma relationnel (Migrations/Seeders)
-- **Groupe 2 (Vue)** : UX et interface graphique via React
-- **Groupe 3 (Contrôleur)** : Logique métier, routage et sécurisation
-
-### Le Défi Critique : La Rupture Technologique
-
-Comment fusionner une application Frontend moderne (React/SPA) avec un Backend robuste (Laravel) sans déployer deux serveurs distincts et gérer les problèmes de CORS ?
-
-## 2. Stratégie d'Intégration : Le Monolithe Hybride
-
-Laravel agit comme chef d'orchestre global, hébergeant le code Frontend tout en servant d'API. (To preview the following diagram, please use any mermaid-compatible viewer in VSCode extension.)
+### Flux de Données
 
 ```mermaid
-graph TB
-    subgraph Client["🖥️ Client Layer"]
-        User["👤 Utilisateur / Navigateur"]
-    end
-    
-    subgraph Laravel["🔧 Laravel Backend"]
-        Router["📍 Routing<br/>welcome.blade.php"]
-        API["📡 API Routes<br/>routes/api.php"]
-        Controllers["⚙️ Contrôleurs G3<br/>Logique Métier"]
-    end
-    
-    subgraph React["⚛️ React Frontend SPA"]
-        Bundle["📦 React Bundle<br/>+ Tailwind + Router"]
-    end
-    
-    subgraph Database["💾 Données G1"]
-        DB["🗄️ MySQL<br/>Migrations/Seeders"]
-    end
-    
-    User -->|Page Request| Router
-    Router -->|Serve| Bundle
-    User -->|Fetch API JSON| API
-    API --> Controllers
-    Controllers -->|Eloquent ORM| DB
-    Bundle -->|Interactive UI| User
-    
-    style Client fill:#e1f5ff
-    style Laravel fill:#fff3e0
-    style React fill:#f3e5f5
-    style Database fill:#e8f5e9
+sequenceDiagram
+    participant User as Utilisateur
+    participant Vue as Vue (React)
+    participant API as Contrôleur (Laravel)
+    participant DB as Modèle (BDD)
+
+    User->>Vue: Action (ex: Connexion)
+    Vue->>API: Requête HTTP (JSON)
+    API->>DB: Interrogation / Modification
+    DB-->>API: Données Brutes
+    API-->>Vue: Réponse Formatée (JSON)
+    Vue->>User: Mise à jour de l'interface
 ```
 
-### 🧱 Backend - Laravel 11
-**Rôle:** Socle de sécurité et API REST exposant des données au format JSON.
+## 🚀 Fonctionnalités
 
-### 🎨 Frontend - React 18 + Tailwind
-**Intégration:** SPA encapsulée dans `resources/js` de Laravel, offrant une navigation fluide sans rechargement.
+- **Authentification Sécurisée** : Login/Register avec Laravel Sanctum et gestion des rôles (Admin, Enseignant, Étudiant).
+- **Tableau de Bord** : Statistiques en temps réel (Nombre d'étudiants, cours, etc.).
+- **Gestion Académique** :
+  - **Emploi du temps** : Affichage dynamique des séances.
+  - **Présences** : Suivi des absences.
+  - **Annonces** : Communication ciblée par filière.
 
-### 🧠 Orchestration - Groupe 3
-**Mission:** Pont vital entre la base de données (G1) et l'interface (G2) via validation et formatage JSON.
+## 🛠️ Prérequis
 
-## 3. Focus Technique : Mécanique d'Intégration Laravel/React (Vite)
+- **PHP 8.2+**
+- **Composer**
+- **Node.js 18+** & **NPM**
+- **SQLite** (ou autre SGBD configuré)
 
-### A. Moteur de Compilation : Vite
+## 📦 Installation
 
-Configuration `vite.config.js` :
+1. **Cloner le projet**
+   ```bash
+   git clone <votre-repo>
+   cd laravel_controller_project_folder
+   ```
 
-```javascript
-plugins: [
-    laravel({
-        input: ['resources/js/app.jsx'],
-        refresh: true, // Hot Module Replacement (HMR)
-    }),
-    react(),
-],
+2. **Backend (Laravel)**
+   ```bash
+   composer install
+   cp .env.example .env
+   php artisan key:generate
+   # Configuration de la base de données (SQLite par défaut)
+   touch database/database.sqlite
+   php artisan migrate:fresh --seed
+   ```
+
+3. **Frontend (React)**
+   ```bash
+   npm install
+   npm run build # Pour la production, ou npm run dev pour le développement
+   ```
+
+## ▶️ Lancement
+
+Pour lancer l'environnement de développement, ouvrez deux terminaux :
+
+**Terminal 1 : Serveur API (Laravel)**
+```bash
+php artisan serve
+```
+*L'API sera accessible sur `http://127.0.0.1:8000`*
+
+**Terminal 2 : Client Web (Vite/React)**
+```bash
+npm run dev
+```
+*L'application sera accessible sur `http://localhost:5173`*
+
+## 🔑 Comptes de Test
+
+La base de données est pré-remplie avec ces comptes (mot de passe : `password`) :
+
+| Rôle | Email | Accès |
+|------|-------|-------|
+| **Admin** | `admin@ensa.ma` | Gestion globale, Statistiques |
+| **Enseignant** | `prof@ensa.ma` | Gestion des cours (Simulé) |
+| **Étudiant** | `etudiant@ensa.ma` | Consultation emploi du temps |
+
+## 📂 Structure Simplifiée
+
+```
+/
+├── app/                 # Logique Backend (Controllers, Models)
+├── database/            # Migrations & Seeders
+├── docs/                # Documentation détaillée (Model, View, Controller)
+├── resources/
+│   ├── js/              # Code Frontend (React)
+│   │   ├── components/  # Composants réutilisables
+│   │   ├── pages/       # Pages de l'application
+│   │   └── Main.jsx     # Point d'entrée & Routing
+│   └── views/           # Point d'entrée Blade (welcome.blade.php)
+├── routes/              # Définition des routes API (api.php)
+└── README.md            # Ce fichier
 ```
 
-**Avantage HMR:** Les modifications React sont reflétées instantanément sans rechargement complet.
+## 📝 Vérification de l'Intégration
 
-### B. Point d'Entrée Unique
-
-Le fichier `welcome.blade.php` est la seule page HTML servie :
-
-```html
-<!DOCTYPE html>
-<head>
-    @viteReactRefresh
-    @vite(['resources/js/app.jsx'])
-</head>
-<body>
-    <div id="app"></div>
-</body>
-```
-
-React prend le contrôle du DOM et gère le routing côté client via React Router.
-
-### C. Flux de Données (API REST)
-
-React effectue des appels asynchrones explicites vers les routes API. Format d'échange : **JSON uniquement**.
-
-## 4. Logique Métier & Performance (Groupe 3)
-
-### 🔗 Routage API (`routes/api.php`)
-
-- `GET /api/seances/{id}` : Récupération d'une séance
-- `POST /api/appel/save` : Validation des présences
-
-### 📡 Optimisation : Eager Loading
-
-**Problème:** N+1 Query Problem  
-**Solution:** Utiliser `with()` d'Eloquent pour charger les relations en amont
-
-```php
-$seance = Seance::with('module')->findOrFail($id);
-```
-
+1. **Connexion** : Connectez-vous avec `admin@ensa.ma`. Si le token est reçu et stocké, la liaison **Vue ↔ Contrôleur** fonctionne.
+2. **Données** : Si les statistiques s'affichent sur le dashboard, la liaison **Contrôleur ↔ Modèle** fonctionne.
+3. **Navigation** : Si vous pouvez naviguer sans rechargement de page, le routage **React** est opérationnel.

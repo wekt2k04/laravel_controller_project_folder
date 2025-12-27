@@ -11,23 +11,30 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // ====== TABLE USERS ======
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->string('role')->default('etudiant');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+
+            // AJOUT IMPORTANT POUR VOTRE PROJET
+            $table->string('role')->default('etudiant');
+            // valeurs possibles : 'prof' | 'etudiant'
+
             $table->rememberToken();
             $table->timestamps();
         });
 
+        // ====== TABLE PASSWORD RESETS ======
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
 
+        // ====== TABLE SESSIONS (pour login) ======
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->foreignId('user_id')->nullable()->index();

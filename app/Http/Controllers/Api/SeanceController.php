@@ -18,8 +18,8 @@ class SeanceController extends Controller
     public function index()
     {
         // 1. On récupère toutes les séances
-        // 'with:module' demande à G1 d'inclure les infos du module associé (SQL JOIN automatique)
-        $seances = Seance::with('module')->orderBy('date_debut', 'desc')->get();
+        // 'with:module.filiere' permet de récupérer la filière associée au module
+        $seances = Seance::with('module.filiere')->orderBy('date_debut', 'desc')->get();
 
         // 2. On renvoie le tout en JSON
         return response()->json($seances);
