@@ -47,7 +47,7 @@ sequenceDiagram
 
 1. **Cloner le projet**
    ```bash
-   git clone <votre-repo>
+   git clone https://github.com/wekt2k04/laravel_controller_project_folder
    cd laravel_controller_project_folder
    ```
 
